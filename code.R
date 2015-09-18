@@ -1,48 +1,23 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
-
-
-## Loading and preprocessing the data
-```{r}
+library(lattice)
+library(dplyr)
 dt <- read.csv("activity.csv", colClasses = "character")
 dt$date<-as.Date(dt$date)
 dt$steps<-as.numeric(dt$steps)
 dt$interval<-as.numeric(dt$interval)
-```
 
 
-## What is mean total number of steps taken per day?
-
-```{r}
-library(dplyr)
 temp<-group_by(dt,date)
 total<-summarise(temp, total=sum(steps,na.rm=TRUE))
 hist(total$total,col="blue", main="Histogram of the total number of steps taken each day",xlab="Total number of steps taken each day")
-mean(total$total,na.rm=TRUE)
-median(total$total,na.rm=TRUE)
-```
+meannoim<-mean(total$total,na.rm=TRUE)
+mediannoim<-median(total$total,na.rm=TRUE)
 
-
-## What is the average daily activity pattern?
-
-```{r}
 temp1<-group_by(dt,interval)
 mean<-summarise(temp1, mean=mean(steps,na.rm=TRUE))
 qqplot(mean$interval,mean$mean, type="l",xlab="interval",ylab="mean")
-mean[which.max(mean$mean),1]
-```
+interval_max<-mean[which.max(mean$mean),1]
 
-
-## Imputing missing values
-```{r}
 sum(is.na(dt$steps))
-```
-The strategy to impute the missing data is to put mean for that 5-minute interval, calculated over all days. 
-```{r}
 dt1<-dt
 for (i in 1:length(dt1$steps)){
         if (is.na(dt1$steps[i])){
@@ -51,22 +26,15 @@ for (i in 1:length(dt1$steps)){
                 dt1$steps[i]<-y[1,2]
         }
 }
-```
 
-```{r}
 dt1$steps<-as.numeric(dt1$steps)
 temp2<-group_by(dt1,date)
 total1<-summarise(temp2, total=sum(steps))
+#mean=mean(steps,na.rm=TRUE), median )
 hist(total1$total,col="blue", main="Histogram imputing missing data",xlab="Total number of steps taken each day")
-mean(total1$total,na.rm=TRUE)
-median(total1$total,na.rm=TRUE)
-```
-Both the mean and the median increased. When NAs were removed it produced zeros in the calculations, which resulted negative bias.
+meanim<-mean(total1$total,na.rm=TRUE)
+medianim<-median(total1$total,na.rm=TRUE)
 
-## Are there differences in activity patterns between weekdays and weekends?
-
-```{r}
-library(lattice)
 weekdays <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
 dt1$wday <- factor((weekdays(dt1$date) %in% weekdays),levels=c(FALSE, TRUE), labels=c('weekend', 'weekday')) 
 temp3<-group_by(dt1,wday,interval)
@@ -74,4 +42,4 @@ mean1<-summarise(temp3, mean=mean(steps))
 
 p<-xyplot(mean ~ interval|wday, data=mean1, layout = c(1, 2),type="l",xlab="Interval", ylab="Number of steps")
 print(p)
-```
+
